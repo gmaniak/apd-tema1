@@ -1,0 +1,1 @@
+g++ -o "/home/catalin/projects/APD-Tema1/bin/x64/Debug/APD-Tema1.out" -Wl,--no-undefined -Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack "/home/catalin/projects/APD-Tema1/obj/x64/Debug/main.o" "/home/catalin/projects/APD-Tema1/obj/x64/Debug/parallel_snake.o"
