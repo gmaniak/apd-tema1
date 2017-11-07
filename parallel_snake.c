@@ -79,7 +79,7 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 		}
 	}
 
-	//Compute Tails - postion and direction
+	//Compute Tails - postion
 	for (int i = 0; i < num_snakes; i++) {
 		int done = 0;
 		
@@ -161,4 +161,8 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 			memcpy(world[i], bufferWorld[i], num_cols * sizeof(int));
 	}
 
+	//Free memory
+	for (int i = 0; i < num_lines; i++)
+		free(bufferWorld[i]);
+	free(bufferWorld);
 }
