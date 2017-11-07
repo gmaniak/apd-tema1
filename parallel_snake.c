@@ -187,4 +187,6 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 	for (int i = 0; i < num_lines; i++)
 		free(bufferWorld[i]);
 	free(bufferWorld);
+
+	printf("No collision!!\n");
 }
