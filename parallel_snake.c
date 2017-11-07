@@ -1,5 +1,29 @@
 #include "main.h"
 #include <stdlib.h>
+#include <string.h>
+
+
+//Gets Next Point location based on current point and direction;
+struct coord getNextLocation(struct coord point, char direction, int num_lines, int num_cols) {
+	struct coord nextPoint;
+	nextPoint = point;
+	switch (direction) {
+	case 'N':
+		nextPoint.line = (point.line - 1) % num_lines;
+		break;
+	case 'S':
+		nextPoint.line = (point.line + 1) % num_lines;
+		break;
+	case 'E':
+		nextPoint.col = (point.col + 1) % num_cols;
+		break;
+	case 'W':
+		nextPoint.col = (point.col - 1) % num_cols;
+		break;
+	}
+	return nextPoint;
+}
+
 
 //Gets the next Tail point based on the current tail location
 struct coord getNextTailPoint(struct snake snake, int** world,int num_lines,int num_cols)
@@ -31,27 +55,6 @@ struct coord getNextTailPoint(struct snake snake, int** world,int num_lines,int 
 	return returnPoint;
 }
 
-//Gets Next Point location based on current point and direction;
-struct coord getNextLocation(struct coord point, char direction, int num_lines, int num_cols) {
-	struct coord nextPoint;
-	nextPoint = point;
-	switch (direction) {
-		case 'N':
-			nextPoint.line = (point.line - 1) % num_lines;
-			break;
-		case 'S':
-			nextPoint.line = (point.line + 1) % num_lines;
-			break;
-		case 'E':
-			nextPoint.col = (point.col + 1) % num_cols;
-			break;
-		case 'W':
-			nextPoint.col = (point.col - 1) % num_cols;
-			break;
-	}
-	return nextPoint;
-}
-
 void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 	struct snake *snakes, int step_count, char *file_name) 
 {
@@ -63,15 +66,15 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 
 
 	//Allocate World Buffer Matrix;
-	int **buffer_world = NULL;
-	buffer_world = (int**)malloc(num_lines * sizeof(int*));
-	if (buffer_world == NULL)
+	int **bufferWorld = NULL;
+	bufferWorld = (int**)malloc(num_lines * sizeof(int*));
+	if (bufferWorld == NULL)
 		return;
 	for (int i = 0; i < num_lines; i++) {
-		buffer_world[i] = (int*)malloc(num_cols * sizeof(int));
-		if (buffer_world[i] == NULL) {
+		bufferWorld[i] = (int*)malloc(num_cols * sizeof(int));
+		if (bufferWorld[i] == NULL) {
 			for (int j = 0; j < i; j++)
-				free(buffer_world[j]);
+				free(bufferWorld[j]);
 			return;
 		}
 	}
@@ -123,21 +126,39 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 	for (int current_step = 0; current_step < step_count; current_step++) {
 		//Copy Current World to current step buffer
 		for (int i = 0; i < num_lines; i++)
-			memcpy(buffer_world[i], world[i], num_cols * sizeof(int));
+			memcpy(bufferWorld[i], world[i], num_cols * sizeof(int));
 
 		//Remove Tails
 		for (int i = 0; i < num_snakes; i++) {
 			struct coord newTail;
 			newTail = getNextTailPoint(snakes[i], world, num_lines, num_cols);
-			world[snakes[i].tail.line][snakes[i].tail.col] = 0;
+			bufferWorld[snakes[i].tail.line][snakes[i].tail.col] = 0;
 			snakes[i].tail = newTail;
 		}
 
 		//Move Heads
+		int colision = 0;
+		for (int i = 0; i < num_snakes; i++) {
+			struct coord nextHead = getNextLocation(snakes[i].head, snakes[i].direction, num_lines, num_cols);
+			
+			if (bufferWorld[nextHead.line][nextHead.col] != 0)
+				colision++;
+			else {
+				snakes[i].head = nextHead;
+				bufferWorld[snakes[i].head.line][snakes[i].head.col] = snakes[i].encoding;
+			}
+		}
 
+		if (colision) {
+			for (int i = 0; i < num_lines; i++)
+				free(bufferWorld[i]);
+			free(bufferWorld);
+			return;
+		}
+			
 		//Save Iteration
 		for (int i = 0; i < num_lines; i++)
-			memcpy(world[i], buffer_world[i], num_cols * sizeof(int));
+			memcpy(world[i], bufferWorld[i], num_cols * sizeof(int));
 	}
 
 }
