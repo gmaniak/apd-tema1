@@ -3,22 +3,29 @@
 #include <string.h>
 
 
+int modulo(int nrA, int nrB) {
+	if (nrA < 0)
+		return (nrA + nrB) % nrB;
+	return nrA % nrB;
+}
+
+
 //Gets Next Point location based on current point and direction;
 struct coord getNextLocation(struct coord point, char direction, int num_lines, int num_cols) {
 	struct coord nextPoint;
 	nextPoint = point;
 	switch (direction) {
 	case 'N':
-		nextPoint.line = (point.line - 1) % num_lines;
+		nextPoint.line = modulo(point.line - 1,num_lines);
 		break;
 	case 'S':
-		nextPoint.line = (point.line + 1) % num_lines;
+		nextPoint.line = modulo(point.line + 1 , num_lines);
 		break;
 	case 'E':
-		nextPoint.col = (point.col + 1) % num_cols;
+		nextPoint.col = modulo(point.col + 1 , num_cols);
 		break;
 	case 'W':
-		nextPoint.col = (point.col - 1) % num_cols;
+		nextPoint.col = modulo(point.col - 1 , num_cols);
 		break;
 	}
 	return nextPoint;
@@ -33,20 +40,20 @@ struct coord getNextTailPoint(struct snake snake, int** world,int num_lines,int 
 	returnPoint = currentTail;
 
 	//Check North
-	if (world[(currentTail.line - 1) % num_cols][currentTail.col] == snake.encoding)
-		returnPoint.line = (currentTail.line - 1) % num_cols;
+	if (world[modulo(currentTail.line - 1 , num_cols)][currentTail.col] == snake.encoding)
+		returnPoint.line = modulo(currentTail.line - 1, num_cols);
 
 	//Check South
-	else if (world[(currentTail.line + 1) % num_lines][currentTail.col] == snake.encoding)
-		returnPoint.line = (currentTail.line + 1) % num_lines;
+	else if (world[modulo(currentTail.line + 1 , num_lines)][currentTail.col] == snake.encoding)
+		returnPoint.line = modulo(currentTail.line + 1, num_lines);
 
 	//Check East
-	else if (world[currentTail.line][(currentTail.col - 1) % num_cols] == snake.encoding)
-		returnPoint.col = (currentTail.col - 1) % num_cols;
+	else if (world[currentTail.line][modulo(currentTail.col - 1, num_cols)] == snake.encoding)
+		returnPoint.col = modulo(currentTail.col - 1, num_cols);
 
 	//Check West
-	else if (world[currentTail.line][(currentTail.col + 1) % num_cols] == snake.encoding)
-		returnPoint.col = (currentTail.col + 1) % num_cols;
+	else if (world[currentTail.line][modulo(currentTail.col + 1, num_cols)] == snake.encoding)
+		returnPoint.col = modulo(currentTail.col + 1, num_cols);
 
 	//Check if Snakes tail coresponds with head
 	else if (snake.head.line == snake.tail.line && snake.head.col == snake.tail.col)
@@ -91,27 +98,27 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 
 		while (!done) {
 			//Check next Cell N
-			if (prevCell != 'N' && world[(current.line - 1) % num_lines][current.col] == snakes[i].encoding) {
+			if (prevCell != 'N' && world[modulo(current.line - 1, num_lines)][current.col] == snakes[i].encoding) {
 				prevCell = 'S';
-				current.line = (current.line - 1) % num_lines;
+				current.line = modulo(current.line - 1, num_lines);
 			}
 
 			//Check South Direction
-			else if (prevCell != 'S' && world[(current.line + 1) % num_lines][current.col] == snakes[i].encoding) {
+			else if (prevCell != 'S' && world[modulo(current.line + 1, num_lines)][current.col] == snakes[i].encoding) {
 				prevCell = 'N';
-				current.line = (current.line + 1) % num_lines;
+				current.line = modulo(current.line + 1, num_lines);
 			}
 
 			//Check West direction
-			else if ( prevCell != 'W' && world[current.line][(current.col - 1) % num_cols] == snakes[i].encoding) {
+			else if ( prevCell != 'W' && world[current.line][modulo(current.col - 1, num_cols)] == snakes[i].encoding) {
 				prevCell = 'E';
-				current.col = (current.col - 1) % num_cols;
+				current.col = modulo(current.col - 1, num_cols);
 			}
 
 			//Check East Direction
-			else if (prevCell != 'E' && world[current.line][(current.col + 1) % num_cols] == snakes[i].encoding) {
+			else if (prevCell != 'E' && world[current.line][modulo(current.col + 1, num_cols)] == snakes[i].encoding) {
 				prevCell = 'W';
-				current.col = (current.col + 1) % num_cols;
+				current.col = modulo(current.col + 1, num_cols);
 			}
 
 			//Tail Found
