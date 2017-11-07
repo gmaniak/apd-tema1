@@ -1,6 +1,7 @@
 #include "main.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 
 int modulo(int nrA, int nrB) {
@@ -24,7 +25,7 @@ struct coord getNextLocation(struct coord point, char direction, int num_lines, 
 	case 'E':
 		nextPoint.col = modulo(point.col + 1 , num_cols);
 		break;
-	case 'W':
+	case 'V':
 		nextPoint.col = modulo(point.col - 1 , num_cols);
 		break;
 	}
@@ -120,14 +121,14 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 			}
 
 			//Check West direction
-			else if ( prevCell != 'W' && world[current.line][modulo(current.col - 1, num_cols)] == snakes[i].encoding) {
+			else if ( prevCell != 'V' && world[current.line][modulo(current.col - 1, num_cols)] == snakes[i].encoding) {
 				prevCell = 'E';
 				current.col = modulo(current.col - 1, num_cols);
 			}
 
 			//Check East Direction
 			else if (prevCell != 'E' && world[current.line][modulo(current.col + 1, num_cols)] == snakes[i].encoding) {
-				prevCell = 'W';
+				prevCell = 'V';
 				current.col = modulo(current.col + 1, num_cols);
 			}
 
@@ -187,6 +188,4 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 	for (int i = 0; i < num_lines; i++)
 		free(bufferWorld[i]);
 	free(bufferWorld);
-
-	printf("No collision!!\n");
 }

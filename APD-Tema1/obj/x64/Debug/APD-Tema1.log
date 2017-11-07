@@ -3,13 +3,12 @@
   Copying sources remotely to '192.168.10.125'
   Starting remote build
   Compiling sources:
-  parallel_snake.c
+  main.c
 C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\Common7\IDE\VC\VCTargets\Application Type\Linux\1.0\Linux.targets(258,5): warning : command line option ‘-fthreadsafe-statics’ is valid for C++/ObjC++ but not for C
 C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\Common7\IDE\VC\VCTargets\Application Type\Linux\1.0\Linux.targets(258,5): warning : command line option ‘-frtti’ is valid for C++/ObjC++ but not for C
-E:\git\apd-tema1\parallel_snake.c(70,40): warning : conversion to ‘long unsigned int’ from ‘int’ may change the sign of the result [-Wsign-conversion]
-E:\git\apd-tema1\parallel_snake.c(74,42): warning : conversion to ‘long unsigned int’ from ‘int’ may change the sign of the result [-Wsign-conversion]
-E:\git\apd-tema1\parallel_snake.c(129,46): warning : conversion to ‘long unsigned int’ from ‘int’ may change the sign of the result [-Wsign-conversion]
-E:\git\apd-tema1\parallel_snake.c(161,46): warning : conversion to ‘long unsigned int’ from ‘int’ may change the sign of the result [-Wsign-conversion]
+E:\git\apd-tema1\main.c(51,41): warning : conversion to ‘long unsigned int’ from ‘int’ may change the sign of the result [-Wsign-conversion]
+E:\git\apd-tema1\main.c(63,32): warning : conversion to ‘long unsigned int’ from ‘int’ may change the sign of the result [-Wsign-conversion]
+E:\git\apd-tema1\main.c(65,24): warning : conversion to ‘size_t {aka long unsigned int}’ from ‘int’ may change the sign of the result [-Wsign-conversion]
   Linking objects
   /home/catalin/projects/APD-Tema1/obj/x64/Debug/main.o: In function `main':
   /home/catalin/projects/APD-Tema1/main.c:24: undefined reference to `omp_get_wtime'
