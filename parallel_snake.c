@@ -1,49 +1,55 @@
 #include "main.h"
 #include <stdlib.h>
 
-struct coord getNextTailPoint(struct snake snake, int** world)
+//Gets the next Tail point based on the current tail location
+struct coord getNextTailPoint(struct snake snake, int** world,int num_lines,int num_cols)
 {
-	struct coord currentTail;
+	struct coord currentTail,returnPoint;
+	currentTail = snake.tail;
+	returnPoint = currentTail;
 
-	//Check next Cell N
-	if (currentTail.line - 1 >= 0 && world[currentTail.line - 1][currentTail.col] == snake.encoding) {
-		current.line -= 1;
-	}
-	else if (current.line - 1 < 0 && prevCell != 'N' && world[num_lines - 1][current.col] == snakes[i].encoding) {
-		prevCell = 'S';
-		current.line = num_lines - 1;
-	}
+	//Check North
+	if (world[(currentTail.line - 1) % num_cols][currentTail.col] == snake.encoding)
+		returnPoint.line = (currentTail.line - 1) % num_cols;
 
-	//Check South Direction
-	else if (current.line + 1 < num_lines  && prevCell != 'S' && world[current.line + 1][current.col] == snakes[i].encoding) {
-		prevCell = 'N';
-		current.line += 1;
-	}
-	else if (current.line + 1 >= num_lines  && prevCell != 'S' && world[0][current.col] == snakes[i].encoding) {
-		prevCell = 'N';
-		current.line = 0;
-	}
+	//Check South
+	else if (world[(currentTail.line + 1) % num_lines][currentTail.col] == snake.encoding)
+		returnPoint.line = (currentTail.line + 1) % num_lines;
 
-	//Check West direction
-	else if (current.col - 1 >= 0 && prevCell != 'W' && world[current.line][current.col - 1] == snakes[i].encoding) {
-		prevCell = 'E';
-		current.col -= 1;
-	}
-	else if (current.col - 1 < 0 && prevCell != 'W' && world[current.line][num_cols - 1] == snakes[i].encoding) {
-		prevCell = 'E';
-		current.col = num_cols - 1;
-	}
+	//Check East
+	else if (world[currentTail.line][(currentTail.col - 1) % num_cols] == snake.encoding)
+		returnPoint.col = (currentTail.col - 1) % num_cols;
 
-	//Check East Direction
-	else if (current.col + 1 < num_cols && prevCell != 'E' && world[current.line][current.col + 1] == snakes[i].encoding) {
-		prevCell = 'W';
-		current.col += 1;
-	}
-	else if (current.col + 1 >= num_cols && prevCell != 'E' && world[current.line][0] == snakes[i].encoding) {
-		prevCell = 'W';
-		current.col = 0;
-	}
+	//Check West
+	else if (world[currentTail.line][(currentTail.col + 1) % num_cols] == snake.encoding)
+		returnPoint.col = (currentTail.col + 1) % num_cols;
 
+	//Check if Snakes tail coresponds with head
+	else if (snake.head.line == snake.tail.line && snake.head.col == snake.tail.col)
+		returnPoint = getNextLocation(snake.head, snake.direction, num_lines, num_cols);
+
+	return returnPoint;
+}
+
+//Gets Next Point location based on current point and direction;
+struct coord getNextLocation(struct coord point, char direction, int num_lines, int num_cols) {
+	struct coord nextPoint;
+	nextPoint = point;
+	switch (direction) {
+		case 'N':
+			nextPoint.line = (point.line - 1) % num_lines;
+			break;
+		case 'S':
+			nextPoint.line = (point.line + 1) % num_lines;
+			break;
+		case 'E':
+			nextPoint.col = (point.col + 1) % num_cols;
+			break;
+		case 'W':
+			nextPoint.col = (point.col - 1) % num_cols;
+			break;
+	}
+	return nextPoint;
 }
 
 void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
@@ -82,50 +88,33 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 
 		while (!done) {
 			//Check next Cell N
-			if (current.line - 1 >= 0 && prevCell != 'N' && world[current.line - 1][current.col] == snakes[i].encoding) {
+			if (prevCell != 'N' && world[(current.line - 1) % num_lines][current.col] == snakes[i].encoding) {
 				prevCell = 'S';
-				current.line -= 1;
-			}
-			else if (current.line - 1 < 0 && prevCell != 'N' && world[num_lines - 1][current.col] == snakes[i].encoding) {
-				prevCell = 'S';
-				current.line = num_lines - 1;
+				current.line = (current.line - 1) % num_lines;
 			}
 
 			//Check South Direction
-			else if (current.line + 1 < num_lines  && prevCell != 'S' && world[current.line + 1][current.col] == snakes[i].encoding) {
+			else if (prevCell != 'S' && world[(current.line + 1) % num_lines][current.col] == snakes[i].encoding) {
 				prevCell = 'N';
-				current.line += 1;
-			}
-			else if (current.line + 1 >= num_lines  && prevCell != 'S' && world[0][current.col] == snakes[i].encoding) {
-				prevCell = 'N';
-				current.line = 0;
+				current.line = (current.line + 1) % num_lines;
 			}
 
 			//Check West direction
-			else if (current.col - 1 >= 0 && prevCell != 'W' && world[current.line][current.col - 1] == snakes[i].encoding) {
+			else if ( prevCell != 'W' && world[current.line][(current.col - 1) % num_cols] == snakes[i].encoding) {
 				prevCell = 'E';
-				current.col -= 1;
-			}
-			else if (current.col - 1 < 0 && prevCell != 'W' && world[current.line][num_cols - 1] == snakes[i].encoding) {
-				prevCell = 'E';
-				current.col = num_cols - 1;
+				current.col = (current.col - 1) % num_cols;
 			}
 
 			//Check East Direction
-			else if (current.col + 1 < num_cols && prevCell != 'E' && world[current.line][current.col + 1] == snakes[i].encoding) {
+			else if (prevCell != 'E' && world[current.line][(current.col + 1) % num_cols] == snakes[i].encoding) {
 				prevCell = 'W';
-				current.col += 1;
-			}
-			else if (current.col + 1 >= num_cols && prevCell != 'E' && world[current.line][0] == snakes[i].encoding) {
-				prevCell = 'W';
-				current.col = 0;
+				current.col = (current.col + 1) % num_cols;
 			}
 
 			//Tail Found
 			else {
 				done = 1;
 				snakes[i].tail = current;
-				snakes[i].tailDirection = prevCell;
 			}
 		}
 
@@ -137,6 +126,12 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 			memcpy(buffer_world[i], world[i], num_cols * sizeof(int));
 
 		//Remove Tails
+		for (int i = 0; i < num_snakes; i++) {
+			struct coord newTail;
+			newTail = getNextTailPoint(snakes[i], world, num_lines, num_cols);
+			world[snakes[i].tail.line][snakes[i].tail.col] = 0;
+			snakes[i].tail = newTail;
+		}
 
 		//Move Heads
 
