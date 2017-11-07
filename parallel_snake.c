@@ -85,6 +85,16 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 			return;
 		}
 	}
+	//Allocate Snake buffer
+	struct snake* bufferSnakes = NULL;
+	bufferSnakes = (struct snake*)malloc(num_snakes * sizeof(struct snake));
+	if (bufferSnakes == NULL) {
+		for (int i = 0; i < num_lines; i++)
+			free(bufferWorld[i]);
+		free(bufferWorld);
+		return;
+	}
+
 
 	//Compute Tails - postion
 	for (int i = 0; i < num_snakes; i++) {
@@ -135,24 +145,27 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 		for (int i = 0; i < num_lines; i++)
 			memcpy(bufferWorld[i], world[i], num_cols * sizeof(int));
 
+		//Copy snakes to snakes buffer
+		memcpy(bufferSnakes, snakes, num_snakes * sizeof(struct snake));
+		
 		//Remove Tails
 		for (int i = 0; i < num_snakes; i++) {
 			struct coord newTail;
-			newTail = getNextTailPoint(snakes[i], world, num_lines, num_cols);
-			bufferWorld[snakes[i].tail.line][snakes[i].tail.col] = 0;
-			snakes[i].tail = newTail;
+			newTail = getNextTailPoint(bufferSnakes[i], world, num_lines, num_cols);
+			bufferWorld[bufferSnakes[i].tail.line][bufferSnakes[i].tail.col] = 0;
+			bufferSnakes[i].tail = newTail;
 		}
 
 		//Move Heads
 		int colision = 0;
 		for (int i = 0; i < num_snakes; i++) {
-			struct coord nextHead = getNextLocation(snakes[i].head, snakes[i].direction, num_lines, num_cols);
+			struct coord nextHead = getNextLocation(bufferSnakes[i].head, bufferSnakes[i].direction, num_lines, num_cols);
 			
 			if (bufferWorld[nextHead.line][nextHead.col] != 0)
 				colision++;
 			else {
-				snakes[i].head = nextHead;
-				bufferWorld[snakes[i].head.line][snakes[i].head.col] = snakes[i].encoding;
+				bufferSnakes[i].head = nextHead;
+				bufferWorld[bufferSnakes[i].head.line][bufferSnakes[i].head.col] = bufferSnakes[i].encoding;
 			}
 		}
 
@@ -160,12 +173,14 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 			for (int i = 0; i < num_lines; i++)
 				free(bufferWorld[i]);
 			free(bufferWorld);
+			free(bufferSnakes);
 			return;
 		}
 			
 		//Save Iteration
 		for (int i = 0; i < num_lines; i++)
 			memcpy(world[i], bufferWorld[i], num_cols * sizeof(int));
+		memcpy(snakes, bufferSnakes, num_snakes * sizeof(struct snake));
 	}
 
 	//Free memory
