@@ -11,32 +11,6 @@ int modulo(int nrA, int nrB) {
 	return nrA % nrB;
 }
 
-void freeMem(int** bufferWorld, struct snake* snakes, omp_lock_t** lockMatrix, int num_lines, int num_cols) {
-	int i;
-
-	if (bufferWorld != NULL) {
-		#pragma omp parallel for private(i)
-		for (i = 0; i < num_lines; i++)
-			free(bufferWorld[i]);
-		free(bufferWorld);
-	}
-
-	if (snakes != NULL) {
-		free(snakes);
-	}
-
-	if (lockMatrix != NULL) {
-		#pragma omp parallel for private(i)
-		for (i = 0; i < num_lines; i++) {
-			for (int j = 0; j < num_cols; j++)
-				omp_destroy_lock(&lockMatrix[i][j]);
-			free(lockMatrix[i]);
-		}
-		free(lockMatrix);
-	}
-}
-
-
 //Gets Next Point location based on current point and direction;
 struct coord getNextLocation(struct coord point, char direction, int num_lines, int num_cols) {
 	struct coord nextPoint;
@@ -88,6 +62,12 @@ struct coord getNextTailPoint(struct snake snake, int** world, int num_lines, in
 	return returnPoint;
 }
 
+void undoWorld(int** world, struct snake* snakes, int num_lines, int num_cols, int num_snakes) {
+	//undoTails Delete
+
+	//undoHead Write and HeadPosition
+}
+
 void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 	struct snake *snakes, int step_count, char *file_name) 
 {
@@ -99,43 +79,11 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 
 	int i;
 
-	//Allocate World Buffer Matrix;
-	int **bufferWorld = NULL;
-	bufferWorld = (int**)malloc(num_lines * sizeof(int*));
-	if (bufferWorld == NULL)
-		return;
-	for (i = 0; i < num_lines; i++) {
-		bufferWorld[i] = (int*)malloc(num_cols * sizeof(int));
-		if (bufferWorld[i] == NULL) {
-			for (int j = 0; j < i; j++)
-				free(bufferWorld[j]);
-			return;
-		}
-	}
-	//Allocate Snake buffer
-	struct snake* bufferSnakes = NULL;
-	bufferSnakes = (struct snake*)malloc(num_snakes * sizeof(struct snake));
-	
-	if (bufferSnakes == NULL) {
-		for (int i = 0; i < num_lines; i++)
-			free(bufferWorld[i]);
-		free(bufferWorld);
-		return;
-	}
-
-	//Alocate Lock Matrix;
-	omp_lock_t** lockMatrix = (omp_lock_t**)malloc(num_lines * sizeof(omp_lock_t *));
-	for (i = 0; i < num_lines; i++) {
-		lockMatrix[i] = (omp_lock_t *)malloc(num_cols * sizeof(omp_lock_t));
-		for (int j = 0; j < num_cols; j++)
-			omp_init_lock(&lockMatrix[i][j]);
-	}
-
-
-	//Compute Linked List for Snake Points
+	//Compute Tails for Snakes
 	int done;
 	struct coord current;
 	char prevCell;
+	
 	#pragma omp parallel for private(i,done,current,prevCell)
 	for (i = 0; i < num_snakes; i++) {
 		done = 0;
@@ -179,53 +127,38 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 	//Execute Each Step
 	for (int current_step = 0; current_step < step_count; current_step++) {
 		
-		//Copy Current World to current step buffer
-		#pragma omp parallel for private(i)
-		for (i = 0; i < num_lines; i++)
-			memcpy(bufferWorld[i], world[i], num_cols * sizeof(int));
-
-		//Copy snakes to snakes buffer
-		memcpy(bufferSnakes, snakes, num_snakes * sizeof(struct snake));
-		
 		//Remove Tails
 		struct coord newTail;
 		#pragma omp parallel for private(i,newTail)
 		for (int i = 0; i < num_snakes; i++) {
-			newTail = getNextTailPoint(bufferSnakes[i], world, num_lines, num_cols);
-			bufferWorld[bufferSnakes[i].tail.line][bufferSnakes[i].tail.col] = 0;
-			bufferSnakes[i].tail = newTail;
+			newTail = getNextTailPoint(snakes[i], world, num_lines, num_cols);
+			world[snakes[i].tail.line][snakes[i].tail.col] = 0;
+			snakes[i].prevTail = snakes[i].tail;
+			snakes[i].tail = newTail;
 		}
 
 		//Move Heads
-		int colision = 0;
 		struct coord nextHead;
 		#pragma omp parallel for private(i,nextHead)
 		for (i = 0; i < num_snakes; i++) {
-			nextHead = getNextLocation(bufferSnakes[i].head, bufferSnakes[i].direction, num_lines, num_cols);
-			
-			omp_set_lock(&lockMatrix[nextHead.line][nextHead.col]);
-			if (bufferWorld[nextHead.line][nextHead.col] != 0) {
-				colision++;
-			}
-			else {
-				bufferSnakes[i].head = nextHead;
-				bufferWorld[bufferSnakes[i].head.line][bufferSnakes[i].head.col] = bufferSnakes[i].encoding;
-			}
-			omp_unset_lock(&lockMatrix[nextHead.line][nextHead.col]);
+			nextHead = getNextLocation(snakes[i].head, snakes[i].direction, num_lines, num_cols);
+			snakes[i].head = nextHead;
+
+			#pragma omp atomic
+			world[snakes[i].head.line][snakes[i].head.col] += snakes[i].encoding;
 		}
 
-		if (colision) {
-			freeMem(bufferWorld, bufferSnakes, lockMatrix, num_lines, num_cols);
-			return;
+		//Check Collision
+		int collision = 0;
+		#pragma omp parallel for private(i) shared(collision)
+		for (i = 0; i < num_snakes; i++) {
+			if (world[snakes[i].head.line][snakes[i].head.col] != snakes[i].encoding) {
+				#pragma omp atomic
+				collision++;
+			}
 		}
-			
-		//Save Iteration
-		#pragma omp parallel for private(i)
-		for (i = 0; i < num_lines; i++)
-			memcpy(world[i], bufferWorld[i], num_cols * sizeof(int));
-		memcpy(snakes, bufferSnakes, num_snakes * sizeof(struct snake));
+
+		if (!collision)
+			undoWorld(world, snakes, num_lines, num_cols, num_snakes);			
 	}
-
-	//Free memory
-	freeMem(bufferWorld, bufferSnakes, lockMatrix, num_lines, num_cols);
 }

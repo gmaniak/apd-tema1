@@ -15,6 +15,7 @@ struct snake
 
 	//Added tail location
 	struct coord tail;
+	struct coord prevTail;
 };
 
 void print_world(char *file_name, int num_snakes, struct snake *snakes,
