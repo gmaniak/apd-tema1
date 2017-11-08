@@ -4,67 +4,6 @@
 #include <stdio.h>
 #include <omp.h>
 
-
-//List Function Definitions
-List newList(struct coord point) {
-	List result;
-	result = (List)malloc(sizeof(Nod));
-	if (result == NULL)
-		return NULL;
-
-	result->next = NULL;
-	result->point = point;
-	return result;
-}
-
-List addElement(List root, struct coord point) {
-	List newElem;
-	newElem = (List)malloc(sizeof(Nod));
-	if (newElem == NULL)
-		return NULL;
-	newElem->next = NULL;
-	newElem->point = point;
-
-	List current = root;
-	while (current->next != NULL)
-		current = current->next;
-
-	current->next = newElem;
-	return newElem;
-}
-
-List getNext(List element) {
-	return element->next;
-}
-
-void update(List element, struct coord point) {
-	element->point = point;
-}
-
-List freeList(List element) {
-	List next, current;
-	current = element;
-	next = element->next;
-	while (element != NULL) {
-		next = element->next;
-		free(element);
-		element = next;
-	}
-	return NULL;
-}
-
-struct coord getValue(List element) {
-	return element->point;
-}
-
-int hasNext(List element) {
-	if (element->next == NULL)
-		return 0;
-	return 1;
-}
-//End List Function
-
-
 //Custom Modulo Function, made to work with -1
 int modulo(int nrA, int nrB) {
 	if (nrA < 0)
@@ -72,7 +11,7 @@ int modulo(int nrA, int nrB) {
 	return nrA % nrB;
 }
 
-void freeMem(int** bufferWorld, struct snake* snakes, omp_lock_t** lockMatrix, int num_lines, int num_cols,int num_snakes) {
+void freeMem(int** bufferWorld, struct snake* snakes, omp_lock_t** lockMatrix, int num_lines, int num_cols) {
 	int i;
 
 	if (bufferWorld != NULL) {
@@ -83,9 +22,6 @@ void freeMem(int** bufferWorld, struct snake* snakes, omp_lock_t** lockMatrix, i
 	}
 
 	if (snakes != NULL) {
-		#pragma omp parallel for private(i)
-		for (i = 0; i < num_snakes; i++)
-			freeList(snakes[i].points);
 		free(snakes);
 	}
 
@@ -120,6 +56,36 @@ struct coord getNextLocation(struct coord point, char direction, int num_lines, 
 		break;
 	}
 	return nextPoint;
+}
+
+//Gets the next Tail point based on the current tail location
+struct coord getNextTailPoint(struct snake snake, int** world, int num_lines, int num_cols)
+{
+	struct coord currentTail, returnPoint;
+	currentTail = snake.tail;
+	returnPoint = currentTail;
+
+	//Check North
+	if (world[modulo(currentTail.line - 1, num_cols)][currentTail.col] == snake.encoding)
+		returnPoint.line = modulo(currentTail.line - 1, num_cols);
+
+	//Check South
+	else if (world[modulo(currentTail.line + 1, num_lines)][currentTail.col] == snake.encoding)
+		returnPoint.line = modulo(currentTail.line + 1, num_lines);
+
+	//Check East
+	else if (world[currentTail.line][modulo(currentTail.col - 1, num_cols)] == snake.encoding)
+		returnPoint.col = modulo(currentTail.col - 1, num_cols);
+
+	//Check West
+	else if (world[currentTail.line][modulo(currentTail.col + 1, num_cols)] == snake.encoding)
+		returnPoint.col = modulo(currentTail.col + 1, num_cols);
+
+	//Check if Snakes tail coresponds with head
+	else if (snake.head.line == snake.tail.line && snake.head.col == snake.tail.col)
+		returnPoint = getNextLocation(snake.head, snake.direction, num_lines, num_cols);
+
+	return returnPoint;
 }
 
 void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
@@ -167,19 +133,13 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 
 
 	//Compute Linked List for Snake Points
-	List lastElem;
 	int done;
 	struct coord current;
 	char prevCell;
-	#pragma omp parallel for private(i,lastElem,done,current,prevCell)
+	#pragma omp parallel for private(i,done,current,prevCell)
 	for (i = 0; i < num_snakes; i++) {
-		snakes[i].points = newList(snakes[i].head);
-		lastElem = snakes[i].points;
-
 		done = 0;
-		
 		current = snakes[i].head;
-
 		prevCell = snakes[i].direction;
 
 		while (!done) {
@@ -211,11 +171,7 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 			else {
 				done = 1;
 				snakes[i].tail = current;
-				break;
 			}
-			
-			//Add Point to List
-			lastElem = addElement(lastElem, current);
 		}
 
 	}
@@ -232,9 +188,13 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 		memcpy(bufferSnakes, snakes, num_snakes * sizeof(struct snake));
 		
 		//Remove Tails
-		#pragma omp parallel for private(i)
-		for (i = 0; i < num_snakes; i++) 
+		struct coord newTail;
+		#pragma omp parallel for private(i.newTail)
+		for (int i = 0; i < num_snakes; i++) {
+			newTail = getNextTailPoint(bufferSnakes[i], world, num_lines, num_cols);
 			bufferWorld[bufferSnakes[i].tail.line][bufferSnakes[i].tail.col] = 0;
+			bufferSnakes[i].tail = newTail;
+		}
 
 		//Move Heads
 		int colision = 0;
@@ -255,33 +215,8 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 		}
 
 		if (colision) {
-			freeMem(bufferWorld, bufferSnakes, lockMatrix, num_lines, num_cols, num_snakes);
+			freeMem(bufferWorld, bufferSnakes, lockMatrix, num_lines, num_cols);
 			return;
-		}
-
-		//Update Snake Points Location
-		struct coord newPoint, aux;
-		List lastElement;
-
-		#pragma omp parallel for private(i,lastElement,newPoint,aux)
-		for (i = 0; i < num_snakes; i++) {
-			lastElement = bufferSnakes[i].points;
-			newPoint = bufferSnakes[i].head;
-
-			//Update List for each snake
-			while (lastElement != NULL) {
-				//update values
-				aux = getValue(lastElement);
-				update(lastElement, newPoint);
-
-				//Update Tail Value
-				if (!hasNext(lastElement))
-					bufferSnakes[i].tail = newPoint;
-
-				//Iterate
-				newPoint = aux;
-				lastElement = getNext(lastElement);
-			}
 		}
 			
 		//Save Iteration
@@ -292,5 +227,5 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 	}
 
 	//Free memory
-	freeMem(bufferWorld, bufferSnakes, lockMatrix, num_lines, num_cols, num_snakes);
+	freeMem(bufferWorld, bufferSnakes, lockMatrix, num_lines, num_cols);
 }

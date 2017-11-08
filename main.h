@@ -7,11 +7,6 @@ struct coord
 	int col;
 };
 
-typedef struct NodGeneric {
-	struct coord point;
-	struct NodGeneric* next;
-}Nod, *List;
-
 struct snake
 {
 	struct coord head;
@@ -20,9 +15,6 @@ struct snake
 
 	//Added tail location
 	struct coord tail;
-
-	//Point Order
-	List points;
 };
 
 void print_world(char *file_name, int num_snakes, struct snake *snakes,
