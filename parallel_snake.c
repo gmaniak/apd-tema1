@@ -132,6 +132,7 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 	// parameters are updated as required for the final state.
 
 	int i;
+	putenv("OMP_NUM_THREADS=8");
 
 	//Allocate World Buffer Matrix;
 	int **bufferWorld = NULL;
