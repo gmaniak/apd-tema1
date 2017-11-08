@@ -14,7 +14,6 @@ E:\git\apd-tema1\parallel_snake.c(159): warning : ignoring #pragma omp parallel 
 E:\git\apd-tema1\parallel_snake.c(169): warning : ignoring #pragma omp parallel [-Wunknown-pragmas]
 E:\git\apd-tema1\parallel_snake.c(174): warning : ignoring #pragma omp atomic [-Wunknown-pragmas]
 E:\git\apd-tema1\parallel_snake.c(180): warning : ignoring #pragma omp parallel [-Wunknown-pragmas]
-E:\git\apd-tema1\parallel_snake.c(183): warning : ignoring #pragma omp atomic [-Wunknown-pragmas]
   Linking objects
   /home/catalin/projects/APD-Tema1/obj/x64/Debug/main.o: In function `main':
   /home/catalin/projects/APD-Tema1/main.c:24: undefined reference to `omp_get_wtime'
