@@ -62,10 +62,37 @@ struct coord getNextTailPoint(struct snake snake, int** world, int num_lines, in
 	return returnPoint;
 }
 
-void undoWorld(int** world, struct snake* snakes, int num_lines, int num_cols, int num_snakes) {
+
+void undoWorld(int** world, struct snake* snakes, int num_lines, int num_cols, int num_snakes){ 
+	int i;
+	//undoHead Write and HeadPosition
+	#pragma omp parallel for private(i)
+	for (i = 0; i < num_snakes; i++) {
+		#pragma omp atomic
+		world[snakes[i].head.line][snakes[i].head.col] -= snakes[i].encoding;
+	
+		switch (snakes[i].direction)
+		{
+		case 'N':
+			snakes[i].head.line = modulo(snakes[i].head.line + 1, num_lines);
+			break;
+		case 'S':
+			snakes[i].head.line = modulo(snakes[i].head.line - 1, num_lines);
+			break;
+		case 'E':
+			snakes[i].head.col = modulo(snakes[i].head.col - 1, num_cols);
+			break;
+		case 'V':
+			snakes[i].head.col = modulo(snakes[i].head.col + 1, num_cols);
+			break;
+		}
+	}
+
 	//undoTails Delete
 
-	//undoHead Write and HeadPosition
+	#pragma omp parallel for private(i)
+	for (i = 0; i < num_snakes; i++) 
+		world[snakes[i].prevTail.line][snakes[i].prevTail.col] = snakes[i].encoding;
 }
 
 void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,

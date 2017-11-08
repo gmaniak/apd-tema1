@@ -65,7 +65,6 @@
     <ClCompile Include="..\parallel_snake.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\linkedList.h" />
     <ClInclude Include="..\main.h" />
   </ItemGroup>
   <ItemGroup>
