@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <omp.h>
 
 
 //List Function Definitions
@@ -72,24 +73,25 @@ int modulo(int nrA, int nrB) {
 }
 
 void freeMem(int** bufferWorld, struct snake* snakes, omp_lock_t** lockMatrix, int num_lines, int num_cols,int num_snakes) {
+	int i;
 
 	if (bufferWorld != NULL) {
 		#pragma omp parallel for private(i)
-		for (int i = 0; i < num_lines; i++)
+		for (i = 0; i < num_lines; i++)
 			free(bufferWorld[i]);
 		free(bufferWorld);
 	}
 
 	if (snakes != NULL) {
 		#pragma omp parallel for private(i)
-		for (int i = 0; i < num_snakes; i++)
+		for (i = 0; i < num_snakes; i++)
 			freeList(snakes[i].points);
 		free(snakes);
 	}
 
 	if (lockMatrix != NULL) {
 		#pragma omp parallel for private(i)
-		for (int i = 0; i < num_lines; i++) {
+		for (i = 0; i < num_lines; i++) {
 			for (int j = 0; j < num_cols; j++)
 				omp_destroy_lock(&lockMatrix[i][j]);
 			free(lockMatrix[i]);
@@ -129,13 +131,14 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 	// DO NOT include any I/O stuff here, but make sure that world and snakes
 	// parameters are updated as required for the final state.
 
+	int i;
 
 	//Allocate World Buffer Matrix;
 	int **bufferWorld = NULL;
 	bufferWorld = (int**)malloc(num_lines * sizeof(int*));
 	if (bufferWorld == NULL)
 		return;
-	for (int i = 0; i < num_lines; i++) {
+	for (i = 0; i < num_lines; i++) {
 		bufferWorld[i] = (int*)malloc(num_cols * sizeof(int));
 		if (bufferWorld[i] == NULL) {
 			for (int j = 0; j < i; j++)
@@ -156,8 +159,8 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 
 	//Alocate Lock Matrix;
 	omp_lock_t** lockMatrix = (omp_lock_t**)malloc(num_lines * sizeof(omp_lock_t *));
-	for (int i = 0; i < num_lines; i++) {
-		lockMatrix[i] = (omp_lock_t *)malloc(num_cols * sizeoof(omp_lock_t));
+	for (i = 0; i < num_lines; i++) {
+		lockMatrix[i] = (omp_lock_t *)malloc(num_cols * sizeof(omp_lock_t));
 		for (int j = 0; j < num_cols; j++)
 			omp_init_lock(&lockMatrix[i][j]);
 	}
@@ -165,7 +168,7 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 
 	//Compute Linked List for Snake Points
 	#pragma omp parallel for private(i,lastElem,current,done,prevCell)
-	for (int i = 0; i < num_snakes; i++) {
+	for (i = 0; i < num_snakes; i++) {
 		snakes[i].points = newList(snakes[i].head);
 		List lastElem = snakes[i].points;
 
@@ -220,7 +223,7 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 		
 		//Copy Current World to current step buffer
 		#pragma omp parallel for private(i)
-		for (int i = 0; i < num_lines; i++)
+		for (i = 0; i < num_lines; i++)
 			memcpy(bufferWorld[i], world[i], num_cols * sizeof(int));
 
 		//Copy snakes to snakes buffer
@@ -228,13 +231,13 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 		
 		//Remove Tails
 		#pragma omp parallel for private(i)
-		for (int i = 0; i < num_snakes; i++) 
+		for (i = 0; i < num_snakes; i++) 
 			bufferWorld[bufferSnakes[i].tail.line][bufferSnakes[i].tail.col] = 0;
 
 		//Move Heads
 		int colision = 0;
 		#pragma omp parallel for private(i,nextHead)
-		for (int i = 0; i < num_snakes; i++) {
+		for (i = 0; i < num_snakes; i++) {
 			struct coord nextHead = getNextLocation(bufferSnakes[i].head, bufferSnakes[i].direction, num_lines, num_cols);
 			
 			omp_set_lock(&lockMatrix[nextHead.line][nextHead.col]);
@@ -256,7 +259,7 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 
 		//Update Snake Points Location
 		#pragma omp parallel for private(i,newPoint,aux,lastElement)
-		for (int i = 0; i < num_snakes; i++) {
+		for (i = 0; i < num_snakes; i++) {
 			struct coord newPoint,aux;
 			List lastElement;
 
@@ -281,7 +284,7 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 			
 		//Save Iteration
 		#pragma omp parallel for private(i)
-		for (int i = 0; i < num_lines; i++)
+		for (i = 0; i < num_lines; i++)
 			memcpy(world[i], bufferWorld[i], num_cols * sizeof(int));
 		memcpy(snakes, bufferSnakes, num_snakes * sizeof(struct snake));
 	}
