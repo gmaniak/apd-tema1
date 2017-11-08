@@ -132,7 +132,6 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 	// parameters are updated as required for the final state.
 
 	int i;
-	printf("Max number of TH=%d\n",omp_get_max_threads());
 
 	//Allocate World Buffer Matrix;
 	int **bufferWorld = NULL;
@@ -268,10 +267,6 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 		for (i = 0; i < num_snakes; i++) {
 			lastElement = bufferSnakes[i].points;
 			newPoint = bufferSnakes[i].head;
-			
-			//Debug data!!
-			printf("OMP Thread id=%d\n", omp_get_thread_num());
-
 
 			//Update List for each snake
 			while (lastElement != NULL) {
