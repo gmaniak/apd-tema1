@@ -168,17 +168,19 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 
 
 	//Compute Linked List for Snake Points
-	#pragma omp parallel for private(i)
+	List lastElem;
+	int done;
+	struct coord current;
+	char prevCell;
+	#pragma omp parallel for private(i,lastElem,done,current,prevCell)
 	for (i = 0; i < num_snakes; i++) {
 		snakes[i].points = newList(snakes[i].head);
-		List lastElem = snakes[i].points;
+		lastElem = snakes[i].points;
 
-		int done = 0;
+		done = 0;
 		
-		struct coord current;
 		current = snakes[i].head;
 
-		char prevCell;
 		prevCell = snakes[i].direction;
 
 		while (!done) {
@@ -237,13 +239,13 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 
 		//Move Heads
 		int colision = 0;
-		#pragma omp parallel for private(i)
+		struct coord nextHead;
+		#pragma omp parallel for private(i,nextHead)
 		for (i = 0; i < num_snakes; i++) {
-			struct coord nextHead = getNextLocation(bufferSnakes[i].head, bufferSnakes[i].direction, num_lines, num_cols);
+			nextHead = getNextLocation(bufferSnakes[i].head, bufferSnakes[i].direction, num_lines, num_cols);
 			
 			omp_set_lock(&lockMatrix[nextHead.line][nextHead.col]);
 			if (bufferWorld[nextHead.line][nextHead.col] != 0) {
-				#pragma omp atomic
 				colision++;
 			}
 			else {
@@ -259,11 +261,10 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 		}
 
 		//Update Snake Points Location
-		#pragma omp parallel for private(i)
+		struct coord newPoint, aux;
+		List lastElement;
+		#pragma omp parallel for private(i,lastEleme,newPoint,aux)
 		for (i = 0; i < num_snakes; i++) {
-			struct coord newPoint,aux;
-			List lastElement;
-
 			lastElement = bufferSnakes[i].points;
 			newPoint = bufferSnakes[i].head;
 			
