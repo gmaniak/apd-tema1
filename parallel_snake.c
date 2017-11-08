@@ -189,7 +189,7 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 		
 		//Remove Tails
 		struct coord newTail;
-		#pragma omp parallel for private(i.newTail)
+		#pragma omp parallel for private(i,newTail)
 		for (int i = 0; i < num_snakes; i++) {
 			newTail = getNextTailPoint(bufferSnakes[i], world, num_lines, num_cols);
 			bufferWorld[bufferSnakes[i].tail.line][bufferSnakes[i].tail.col] = 0;
