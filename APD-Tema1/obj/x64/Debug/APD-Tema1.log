@@ -6,14 +6,16 @@
   parallel_snake.c
 C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\Common7\IDE\VC\VCTargets\Application Type\Linux\1.0\Linux.targets(258,5): warning : command line option ‘-fthreadsafe-statics’ is valid for C++/ObjC++ but not for C
 C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\Common7\IDE\VC\VCTargets\Application Type\Linux\1.0\Linux.targets(258,5): warning : command line option ‘-frtti’ is valid for C++/ObjC++ but not for C
-E:\git\apd-tema1\parallel_snake.c(69): warning : ignoring #pragma omp parallel [-Wunknown-pragmas]
-E:\git\apd-tema1\parallel_snake.c(71): warning : ignoring #pragma omp atomic [-Wunknown-pragmas]
-E:\git\apd-tema1\parallel_snake.c(93): warning : ignoring #pragma omp parallel [-Wunknown-pragmas]
-E:\git\apd-tema1\parallel_snake.c(114): warning : ignoring #pragma omp parallel [-Wunknown-pragmas]
-E:\git\apd-tema1\parallel_snake.c(159): warning : ignoring #pragma omp parallel [-Wunknown-pragmas]
-E:\git\apd-tema1\parallel_snake.c(169): warning : ignoring #pragma omp parallel [-Wunknown-pragmas]
-E:\git\apd-tema1\parallel_snake.c(174): warning : ignoring #pragma omp atomic [-Wunknown-pragmas]
-E:\git\apd-tema1\parallel_snake.c(180): warning : ignoring #pragma omp parallel [-Wunknown-pragmas]
+E:\git\apd-tema1\parallel_snake.c(30): warning : ignoring #pragma omp parallel [-Wunknown-pragmas]
+E:\git\apd-tema1\parallel_snake.c(75): warning : ignoring #pragma omp parallel [-Wunknown-pragmas]
+E:\git\apd-tema1\parallel_snake.c(103): warning : ignoring #pragma omp parallel [-Wunknown-pragmas]
+E:\git\apd-tema1\parallel_snake.c(124): warning : ignoring #pragma omp atomic [-Wunknown-pragmas]
+E:\git\apd-tema1\parallel_snake.c(129): warning : ignoring #pragma omp parallel [-Wunknown-pragmas]
+E:\git\apd-tema1\parallel_snake.c(132): warning : ignoring #pragma omp atomic [-Wunknown-pragmas]
+E:\git\apd-tema1\parallel_snake.c(140): warning : ignoring #pragma omp parallel [-Wunknown-pragmas]
+E:\git\apd-tema1\parallel_snake.c(142): warning : ignoring #pragma omp atomic [-Wunknown-pragmas]
+E:\git\apd-tema1\parallel_snake.c(163): warning : ignoring #pragma omp parallel [-Wunknown-pragmas]
+E:\git\apd-tema1\parallel_snake.c(74,16): warning : unused variable ‘newTail’ [-Wunused-variable]
   Linking objects
   /home/catalin/projects/APD-Tema1/obj/x64/Debug/main.o: In function `main':
   /home/catalin/projects/APD-Tema1/main.c:24: undefined reference to `omp_get_wtime'
