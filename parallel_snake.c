@@ -21,6 +21,7 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 
 	int i;
 	int collision = 0;
+	int current_step;
 
 	//Compute Tails for Snakes
 	int done;
@@ -68,12 +69,12 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 	}
 
 	//Execute Each Step
-	for (int current_step = 0; current_step < step_count; current_step++) {
+	for (current_step = 0; current_step < step_count; current_step++) {
 		
 		//Remove Tails
 		struct coord newTail;
 		#pragma omp parallel for private(i,newTail)
-		for (int i = 0; i < num_snakes; i++) {
+		for (i = 0; i < num_snakes; i++) {
 			snakes[i].prevTail = snakes[i].tail;
 			world[snakes[i].tail.line][snakes[i].tail.col] = 0;
 
@@ -134,8 +135,8 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 			}
 		}
 
-		if (!collision) {
-			
+		if (collision) {
+		
 			//undoHead Write and HeadPosition
 			#pragma omp parallel for private(i)
 			for (i = 0; i < num_snakes; i++) {
@@ -163,6 +164,9 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 			#pragma omp parallel for private(i)
 			for (i = 0; i < num_snakes; i++)
 				world[snakes[i].prevTail.line][snakes[i].prevTail.col] = snakes[i].encoding;
+
+			//End
+			current_step = step_count;
 		}			
 	}
 }
