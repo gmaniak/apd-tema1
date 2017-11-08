@@ -263,11 +263,16 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 		//Update Snake Points Location
 		struct coord newPoint, aux;
 		List lastElement;
-		#pragma omp parallel for private(i,lastEleme,newPoint,aux)
+
+		#pragma omp parallel for private(i,lastElement,newPoint,aux)
 		for (i = 0; i < num_snakes; i++) {
 			lastElement = bufferSnakes[i].points;
 			newPoint = bufferSnakes[i].head;
 			
+			//Debug data!!
+			printf("OMP Thread id=%d\n", omp_get_thread_num());
+
+
 			//Update List for each snake
 			while (lastElement != NULL) {
 				//update values
