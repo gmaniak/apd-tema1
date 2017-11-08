@@ -1,9 +1,71 @@
 #include "main.h"
+//#include "linkedList.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
 
+//List Function Definitions
+List newList(struct coord point) {
+	List result;
+	result = (List)malloc(sizeof(Nod));
+	if (result == NULL)
+		return NULL;
+
+	result->next = NULL;
+	result->point = point;
+	return result;
+}
+
+List addElement(List root, struct coord point) {
+	List newElem;
+	newElem = (List)malloc(sizeof(Nod));
+	if (newElem == NULL)
+		return NULL;
+	newElem->next = NULL;
+	newElem->point = point;
+
+	List current = root;
+	while (current->next != NULL)
+		current = current->next;
+
+	current->next = newElem;
+	return newElem;
+}
+
+List getNext(List element) {
+	return element->next;
+}
+
+void update(List element, struct coord point) {
+	element->point = point;
+}
+
+List freeList(List element) {
+	List next, current;
+	current = element;
+	next = element->next;
+	while (element != NULL) {
+		next = element->next;
+		free(element);
+		element = next;
+	}
+	return NULL;
+}
+
+struct coord getValue(List element) {
+	return element->point;
+}
+
+int hasNext(List element) {
+	if (element->next == NULL)
+		return 0;
+	return 1;
+}
+//End List Function
+
+
+//Custom Modulo Function, made to work with -1
 int modulo(int nrA, int nrB) {
 	if (nrA < 0)
 		return (nrA + nrB) % nrB;
@@ -97,8 +159,11 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 	}
 
 
-	//Compute Tails - postion
+	//Compute Linked List for Snake Points
 	for (int i = 0; i < num_snakes; i++) {
+		snakes[i].points = newList(snakes[i].head);
+		List lastElem = snakes[i].points;
+
 		int done = 0;
 		
 		struct coord current;
@@ -136,7 +201,11 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 			else {
 				done = 1;
 				snakes[i].tail = current;
+				break;
 			}
+			
+			//Add Point to List
+			lastElem = addElement(lastElem, current);
 		}
 
 	}
@@ -150,12 +219,8 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 		memcpy(bufferSnakes, snakes, num_snakes * sizeof(struct snake));
 		
 		//Remove Tails
-		for (int i = 0; i < num_snakes; i++) {
-			struct coord newTail;
-			newTail = getNextTailPoint(bufferSnakes[i], world, num_lines, num_cols);
+		for (int i = 0; i < num_snakes; i++) 
 			bufferWorld[bufferSnakes[i].tail.line][bufferSnakes[i].tail.col] = 0;
-			bufferSnakes[i].tail = newTail;
-		}
 
 		//Move Heads
 		int colision = 0;
@@ -175,7 +240,34 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 				free(bufferWorld[i]);
 			free(bufferWorld);
 			free(bufferSnakes);
+			for (int i = 0; i < num_snakes; i++)
+				freeList(snakes[i].points);
+			
 			return;
+		}
+
+		//Update Snake Points Location
+		for (int i = 0; i < num_snakes; i++) {
+			struct coord newPoint,aux;
+			List lastElement;
+
+			lastElement = bufferSnakes[i].points;
+			newPoint = bufferSnakes[i].head;
+			
+			//Update List for each snake
+			while (lastElement != NULL) {
+				//update values
+				aux = getValue(lastElement);
+				update(lastElement, newPoint);
+
+				//Update Tail Value
+				if (!hasNext(lastElement))
+					bufferSnakes[i].tail = newPoint;
+
+				//Iterate
+				newPoint = aux;
+				lastElement = getNext(lastElement);
+			}
 		}
 			
 		//Save Iteration
@@ -188,4 +280,6 @@ void run_simulation(int num_lines, int num_cols, int **world, int num_snakes,
 	for (int i = 0; i < num_lines; i++)
 		free(bufferWorld[i]);
 	free(bufferWorld);
+	for (int i = 0; i < num_snakes; i++)
+		freeList(snakes[i].points);
 }

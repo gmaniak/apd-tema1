@@ -1,11 +1,17 @@
 #ifndef __MAIN_H__
 #define __MAIN_H__
+//#include "linkedList.h"
 
 struct coord
 {
 	int line;
 	int col;
 };
+
+typedef struct NodGeneric {
+	struct coord point;
+	struct NodGeneric* next;
+}Nod, *List;
 
 struct snake
 {
@@ -15,6 +21,9 @@ struct snake
 
 	//Added tail location
 	struct coord tail;
+
+	//Point Order
+	List points;
 };
 
 void print_world(char *file_name, int num_snakes, struct snake *snakes,
